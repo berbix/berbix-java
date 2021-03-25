@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'maven-publish'
+    id 'signing'
 }
 
 version '1.0-beta1'
@@ -24,6 +25,11 @@ test {
     useJUnitPlatform()
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 publishing {
     publications {
         berbixJava(MavenPublication) {
@@ -39,6 +45,19 @@ publishing {
                         name = 'MIT License'
                         url = 'https://www.opensource.org/licenses/mit-license.php'
                     }
+                }
+
+                developers {
+                    developer {
+                        id.set("nwadams")
+                        name.set("Nick Adams")
+                        email.set("nick@berbix.com")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:https://github.com/berbix/berbix-java.git")
+                    developerConnection.set("scm:git:https://github.com/berbix/berbix-java.git")
+                    url.set("https://github.com/berbix/berbix-java")
                 }
             }
         }
@@ -61,4 +80,8 @@ publishing {
             }
         }
     }
+}
+
+signing {
+    sign publishing.publications.berbixJava
 }
