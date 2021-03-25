@@ -212,4 +212,9 @@ To release a new version of the SDK, first bump the version in `berbix-java/buil
 
 Publish to maven:
     
-    gradle berbix-java:publish
+    gradle berbix-java:publishBerbixJavaPublicationToMavenCentralRepository
+
+Set credentials in `~/.gradle/gradle.properties`
+
+    usr = username
+    pwd = password
