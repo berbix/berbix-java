@@ -1,0 +1,53 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+version '1.0-beta1'
+group 'com.berbix.sdk'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.12.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.12.2'
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    implementation 'org.eclipse.jetty:jetty-client:9.4.38.v20210224'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        berbixJava(MavenPublication) {
+            from components.java
+
+            pom {
+                name = 'Berbix Java SDK'
+                description = 'This Berbix Java library provides simple interfaces to interact with the Berbix API.'
+                url = 'https://www.github.com/berbix/berbix-java'
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://www.opensource.org/licenses/mit-license.php'
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'localRepo'
+            url = "file://${buildDir}/repo"
+        }
+    }
+}
