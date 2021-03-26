@@ -5,7 +5,7 @@ This Berbix Java library provides simple interfaces to interact with the Berbix 
 
 Install via Gradle
 
-    implementation 'com.berbix.sdk:berbix-java:1.0.0'
+    implementation 'com.berbix:berbix-java:1.0.0-beta1'
 
 ## Usage
 
@@ -212,4 +212,9 @@ To release a new version of the SDK, first bump the version in `berbix-java/buil
 
 Publish to maven:
     
-    gradle berbix-java:publish
+    gradle berbix-java:publishBerbixJavaPublicationToMavenCentralRepository
+
+Set credentials in `~/.gradle/gradle.properties`
+
+    usr = username
+    pwd = password
