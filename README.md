@@ -5,7 +5,9 @@ This Berbix Java library provides simple interfaces to interact with the Berbix 
 
 Install via Gradle
 
-    implementation 'com.berbix:berbix-java:1.0.0-beta1'
+    implementation 'com.berbix:berbix-java:1.0.0-beta2'
+
+Also available on [Maven](https://search.maven.org/artifact/com.berbix/berbix-java)
 
 ## Usage
 
