@@ -312,6 +312,7 @@ public class BerbixApi {
     @Override
     public void onComplete(Result result) {
       if (result.isFailed()) {
+        // 4xx and 5xx should result in failure exceptions
         completable.completeExceptionally(result.getFailure());
       } else {
         HttpContentResponse response =
