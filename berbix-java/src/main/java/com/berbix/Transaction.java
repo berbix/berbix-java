@@ -15,6 +15,7 @@ public class Transaction {
   public List<String> flags;
   public Long id;
   public String implementationInfo;
+  public TransactionImagesSet images;
 
   public static class Duplicate {
     public String customerUid;
@@ -54,5 +55,18 @@ public class Transaction {
         public String value;
       }
     }
+  }
+
+  public static class TransactionImagesSet {
+    public TransactionImages front;
+    public TransactionImages back;
+    public TransactionImages selfie;
+    public TransactionImages liveness;
+  }
+
+  public static class TransactionImages {
+    public String fullImage;
+    public String faceImage;
+    public String croppedImage;
   }
 }
