@@ -4,11 +4,16 @@ plugins {
     id 'signing'
 }
 
-version '1.0.0'
+version '1.0.1'
 group 'com.berbix'
 
 repositories {
     mavenCentral()
+}
+
+compileJava {
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
 }
 
 dependencies {
