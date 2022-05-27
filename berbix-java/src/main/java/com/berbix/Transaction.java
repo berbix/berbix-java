@@ -9,7 +9,7 @@ public class Transaction {
   public ZonedDateTime createdAt;
   public String customerUid;
   public String dashboardUrl;
-  List<Duplicate> duplicates;
+  public List<Duplicate> duplicates;
   public String entity;
   public Fields fields;
   public List<String> flags;
