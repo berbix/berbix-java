@@ -5,7 +5,7 @@ plugins {
     id 'java-library-distribution'
 }
 
-version '1.0.3'
+version '1.0.4'
 group 'com.berbix'
 
 repositories {
@@ -18,8 +18,8 @@ compileJava {
 }
 
 dependencies {
-    implementation 'com.fasterxml.jackson.core:jackson-core:2.12.2'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.2'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.14.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.12.2'
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'org.eclipse.jetty:jetty-client:9.4.49.v20220914'
