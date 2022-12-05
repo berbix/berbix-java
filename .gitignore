@@ -25,3 +25,6 @@ hs_err_pid*
 berbix-java/build
 demo-app/build
 .idea/
+.gradle/
+berbix-java/.gradle/
+berbix-java/.DS_Store
