@@ -18,6 +18,7 @@ compileJava {
 }
 
 dependencies {
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
     implementation 'com.fasterxml.jackson.core:jackson-core:2.14.1'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.12.2'
@@ -76,6 +77,7 @@ publishing {
             url = "file://${buildDir}/repo"
         }
 
+/*
         maven {
             name = "MavenCentral"
             def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2"
@@ -86,6 +88,7 @@ publishing {
                 password = "$pwd"
             }
         }
+*/
     }
 }
 
