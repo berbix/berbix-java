@@ -123,16 +123,16 @@ public class BerbixApi {
 
     Request request;
 
-	try {
-	  request = requestBuilder
+    try {
+      request = requestBuilder
         .post(RequestBody.create(MEDIA_TYPE_JSON, objectMapper.writeValueAsString(payload)))
-	    .build();
-	} catch (JsonProcessingException e) {
+        .build();
+    } catch (JsonProcessingException e) {
       throw new BerbixException("Unable to create transaction", e);
     }
 
     OkHttpResponseFuture callback = new OkHttpResponseFuture();
-	okHttpClient.newCall(request).enqueue(callback);
+    okHttpClient.newCall(request).enqueue(callback);
 
     return callback.future.thenApply(response -> {
       String apiResponseData;
@@ -142,18 +142,18 @@ public class BerbixApi {
         throw new BerbixException("Unable to create transaction", e);
       }
 
-	  FetchTokensResponse fetchTokensResponse = null;
-		try {
-		  fetchTokensResponse = objectMapper.readValue(apiResponseData, FetchTokensResponse.class);
-		  fetchTokensResponse.responseJsonString = apiResponseData;
-		} catch (JsonProcessingException e) {
+      FetchTokensResponse fetchTokensResponse = null;
+        try {
+          fetchTokensResponse = objectMapper.readValue(apiResponseData, FetchTokensResponse.class);
+          fetchTokensResponse.responseJsonString = apiResponseData;
+        } catch (JsonProcessingException e) {
           throw new BerbixException("Unable to create transaction", e);
-		} finally {
+        } finally {
           response.close();
         }
 
       return fetchTokensResponse;
-	});
+    });
   }
 
   public CompletableFuture<Transaction> fetchTransactionAsync(Tokens tokens) {
@@ -208,7 +208,7 @@ public class BerbixApi {
       Request request = requestBuilder.build();
 
       OkHttpResponseFuture callback = new OkHttpResponseFuture();
-	  okHttpClient.newCall(request).enqueue(callback);
+      okHttpClient.newCall(request).enqueue(callback);
 
       return callback.future.thenApply(response -> {
         String responseData;
