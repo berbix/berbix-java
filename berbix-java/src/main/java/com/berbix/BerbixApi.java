@@ -56,7 +56,9 @@ public class BerbixApi {
     });
     objectMapper.registerModule(enumModule);
 
-    okHttpClient = new OkHttpClient();
+    okHttpClient = new OkHttpClient.Builder()
+     .callTimeout(REQUEST_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
+     .build();
   }
 
   void shutdown() {
@@ -180,15 +182,30 @@ public class BerbixApi {
         .addHeader("Accept", "application/json")
         .addHeader("User-Agent", "BerbixJava/" + Berbix.BERBIX_SDK_VERSION);
 
-      Request request;
-
-	  try {
-	    request = requestBuilder
-          .post(RequestBody.create(MEDIA_TYPE_JSON, objectMapper.writeValueAsString(payload)))
-	      .build();
-	  } catch (JsonProcessingException e) {
-        throw new BerbixException("Unable to create transaction", e);
+      if (payload != null) {
+          try {
+            RequestBody reqBody = RequestBody.create(MEDIA_TYPE_JSON, objectMapper.writeValueAsString(payload));
+            switch (method) {
+                case "PUT":
+                  requestBuilder = requestBuilder.put(reqBody);
+                  break;
+                case "PATCH":
+                  requestBuilder = requestBuilder.patch(reqBody);
+                  break;
+                case "POST":
+                  requestBuilder = requestBuilder.post(reqBody);
+                  break;
+            }
+          } catch (JsonProcessingException e) {
+            throw new BerbixException("Unable to create transaction", e);
+          }
       }
+
+      if (method == "DELETE") {
+        requestBuilder = requestBuilder.delete();
+      }
+
+      Request request = requestBuilder.build();
 
       OkHttpResponseFuture callback = new OkHttpResponseFuture();
 	  okHttpClient.newCall(request).enqueue(callback);
