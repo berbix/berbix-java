@@ -9,15 +9,15 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.HttpContentResponse;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.client.util.BufferingResponseListener;
-import org.eclipse.jetty.client.util.BytesContentProvider;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Callback;
+import okhttp3.Call;
+import okhttp3.Request.Builder;
+import okhttp3.RequestBody;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -33,9 +33,12 @@ public class BerbixApi {
   private static final int REQUEST_TIMEOUT_MILLIS = 30000;
   private final String apiSecret;
   private final String apiHost;
-  private final HttpClient jettyClient;
+  private final OkHttpClient okHttpClient;
 
   private final ObjectMapper objectMapper;
+
+  public static final MediaType MEDIA_TYPE_JSON
+      = MediaType.parse("application/json; charset=utf-8");
 
   public BerbixApi(String apiSecret, String apiHost) {
     this.apiSecret = apiSecret;
@@ -53,30 +56,13 @@ public class BerbixApi {
     });
     objectMapper.registerModule(enumModule);
 
-    SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
-    jettyClient = new HttpClient(sslContextFactory);
-
-    try {
-      jettyClient.start();
-      Thread shutdown = new Thread(() -> {
-        try {
-          jettyClient.stop();
-        } catch(Exception e){
-          // ignore
-        }
-      });
-      Runtime.getRuntime().addShutdownHook(shutdown);
-    } catch(Exception e) {
-      // ignore
-    }
+    okHttpClient = new OkHttpClient.Builder()
+     .callTimeout(REQUEST_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
+     .build();
   }
 
   void shutdown() {
-    try {
-      jettyClient.stop();
-    } catch(Exception e){
-      // ignore
-    }
+
   }
 
   public CompletableFuture<CreateTransactionResponse> createTransactionAsync(CreateTransactionRequest createTransactionRequest) {
@@ -128,39 +114,43 @@ public class BerbixApi {
   }
 
   private CompletableFuture<FetchTokensResponse> fetchTokens(String path, Object payload) {
-    Request request = jettyClient.newRequest(apiHost + path);
-    request.method(HttpMethod.POST);
-    request.header("Authorization", "Basic " + Base64.getEncoder().encodeToString((apiSecret + ":").getBytes(StandardCharsets.UTF_8)));
-    request.header("Content-Type", "application/json");
-    request.header("Accept", "application/json");
-    request.header("User-Agent", "BerbixJava/" + Berbix.BERBIX_SDK_VERSION);
+    Builder requestBuilder = new Request.Builder()
+      .url(apiHost + path)
+      .header("Authorization", "Basic " + Base64.getEncoder().encodeToString((apiSecret + ":").getBytes(StandardCharsets.UTF_8)))
+      .addHeader("Content-Type", "application/json")
+      .addHeader("Accept", "application/json")
+      .addHeader("User-Agent", "BerbixJava/" + Berbix.BERBIX_SDK_VERSION);
 
-    BytesContentProvider bytesRequestContent;
+    Request request;
+
     try {
-      bytesRequestContent = new BytesContentProvider("application/json",
-          objectMapper.writeValueAsString(payload).getBytes(StandardCharsets.UTF_8));
+      request = requestBuilder
+        .post(RequestBody.create(MEDIA_TYPE_JSON, objectMapper.writeValueAsString(payload)))
+        .build();
     } catch (JsonProcessingException e) {
       throw new BerbixException("Unable to create transaction", e);
     }
-    request.content(bytesRequestContent, "application/json");
 
-    CompletableFuture<ContentResponse> completableFuture = new CompletableFuture<>();
-    request.timeout(REQUEST_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-    request.send(new CompletableFutureResponseListener(completableFuture));
+    OkHttpResponseFuture callback = new OkHttpResponseFuture();
+    okHttpClient.newCall(request).enqueue(callback);
 
-    return completableFuture.thenApply(response -> {
-      String apiResponseData = response.getContentAsString();
-
-      // uncomment to see raw response
-      // System.out.println("response:" + apiResponseData);
+    return callback.future.thenApply(response -> {
+      String apiResponseData;
+      try {
+        apiResponseData = response.body().string();
+      } catch (IOException e) {
+        throw new BerbixException("Unable to create transaction", e);
+      }
 
       FetchTokensResponse fetchTokensResponse = null;
-      try {
-        fetchTokensResponse = objectMapper.readValue(apiResponseData, FetchTokensResponse.class);
-        fetchTokensResponse.responseJsonString = apiResponseData;
-      } catch (JsonProcessingException e) {
-        completableFuture.completeExceptionally(e);
-      }
+        try {
+          fetchTokensResponse = objectMapper.readValue(apiResponseData, FetchTokensResponse.class);
+          fetchTokensResponse.responseJsonString = apiResponseData;
+        } catch (JsonProcessingException e) {
+          throw new BerbixException("Unable to create transaction", e);
+        } finally {
+          response.close();
+        }
 
       return fetchTokensResponse;
     });
@@ -185,38 +175,55 @@ public class BerbixApi {
 
   private <T> CompletableFuture<T> tokenAuthRequest(String method, Tokens tokens, String path, Object payload, Class<T> responseClass) throws IOException {
     return refreshIfNecessaryAsync(tokens).thenCompose(newTokens -> {
-      Request request = jettyClient.newRequest(apiHost + path);
-      request.method(method);
-      request.header("Authorization", "Bearer " + newTokens.accessToken);
-      request.header("Content-Type", "application/json");
-      request.header("Accept", "application/json");
-      request.header("User-Agent", "BerbixJava/" + Berbix.BERBIX_SDK_VERSION);
+      Builder requestBuilder = new Request.Builder()
+        .url(apiHost + path)
+        .header("Authorization", "Bearer " + newTokens.accessToken)
+        .addHeader("Content-Type", "application/json")
+        .addHeader("Accept", "application/json")
+        .addHeader("User-Agent", "BerbixJava/" + Berbix.BERBIX_SDK_VERSION);
 
       if (payload != null) {
-        BytesContentProvider bytesRequestContent;
-        try {
-          bytesRequestContent = new BytesContentProvider("application/json",
-              objectMapper.writeValueAsString(payload).getBytes(StandardCharsets.UTF_8));
-        } catch (JsonProcessingException ex) {
-          throw new BerbixException("Unable to serialize API request", ex);
-        }
-        request.content(bytesRequestContent, "application/json");
+          try {
+            RequestBody reqBody = RequestBody.create(MEDIA_TYPE_JSON, objectMapper.writeValueAsString(payload));
+            switch (method) {
+                case "PUT":
+                  requestBuilder = requestBuilder.put(reqBody);
+                  break;
+                case "PATCH":
+                  requestBuilder = requestBuilder.patch(reqBody);
+                  break;
+                case "POST":
+                  requestBuilder = requestBuilder.post(reqBody);
+                  break;
+            }
+          } catch (JsonProcessingException e) {
+            throw new BerbixException("Unable to create transaction", e);
+          }
       }
 
-      CompletableFuture<ContentResponse> completableFuture = new CompletableFuture<>();
-      request.timeout(REQUEST_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-      request.send(new CompletableFutureResponseListener(completableFuture));
+      if (method == "DELETE") {
+        requestBuilder = requestBuilder.delete();
+      }
 
-      return completableFuture.thenApply(response -> {
-        if (response.getStatus() == 204 && responseClass == String.class) {
+      Request request = requestBuilder.build();
+
+      OkHttpResponseFuture callback = new OkHttpResponseFuture();
+      okHttpClient.newCall(request).enqueue(callback);
+
+      return callback.future.thenApply(response -> {
+        String responseData;
+
+        if (response.code() == 204 && responseClass == String.class) {
           // cast string as String so T compiles.
           return responseClass.cast("finished");
         } else {
-          String responseData = response.getContentAsString();
           try {
+            responseData = response.body().string();
             return objectMapper.readValue(responseData, responseClass);
-          } catch (JsonProcessingException ex) {
-            throw new BerbixException("Unable to read API response", ex);
+          } catch (IOException e) {
+            throw new BerbixException("Unable to create transaction", e);
+          } finally {
+            response.close();
           }
         }
       });
@@ -301,28 +308,20 @@ public class BerbixApi {
     }
   }
 
-  public static class CompletableFutureResponseListener extends BufferingResponseListener {
-    private final CompletableFuture<ContentResponse> completable;
+  public class OkHttpResponseFuture implements Callback {
+    public final CompletableFuture<Response> future = new CompletableFuture<>();
 
-    public CompletableFutureResponseListener(
-        CompletableFuture<ContentResponse> completable) {
-      this.completable = completable;
+    public OkHttpResponseFuture() {
     }
 
     @Override
-    public void onComplete(Result result) {
-      if (result.isFailed()) {
-        // 4xx and 5xx should result in failure exceptions
-        completable.completeExceptionally(result.getFailure());
-      } else {
-        HttpContentResponse response =
-            new HttpContentResponse(
-                result.getResponse(),
-                getContent(),
-                getMediaType(),
-                getEncoding());
-        completable.complete(response);
-      }
+    public void onFailure(Call call, IOException e) {
+      future.completeExceptionally(e);
+    }
+
+    @Override
+    public void onResponse(Call call, Response response) throws IOException {
+      future.complete(response);
     }
   }
 }
