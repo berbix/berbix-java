@@ -5,4 +5,5 @@ public class CreateTransactionRequest {
   public String templateKey;
   public String phone;
   public String email;
+  public boolean consentsToAutomatedFacialRecognition;
 }

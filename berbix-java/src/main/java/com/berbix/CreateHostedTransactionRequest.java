@@ -5,6 +5,7 @@ public class CreateHostedTransactionRequest {
   public String templateKey;
   public String phone;
   public String email;
+  public boolean consentsToAutomatedFacialRecognition;
   public HostedOptions hostedOptions = new HostedOptions();
 
   public static class HostedOptions {

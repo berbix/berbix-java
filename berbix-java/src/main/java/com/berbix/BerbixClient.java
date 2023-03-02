@@ -31,6 +31,14 @@ public class BerbixClient implements AutoCloseable {
     return berbixAPI.createTransactionAsync(createTransactionRequest);
   }
 
+  public CreateAPIOnlyTransactionResponse createAPIOnlyTransaction(CreateAPIOnlyTransactionRequest createAPIOnlyTransactionRequest) throws ExecutionException, InterruptedException {
+    return createAPIOnlyTransactionAsync(createAPIOnlyTransactionRequest).get();
+  }
+
+  public CompletableFuture<CreateAPIOnlyTransactionResponse> createAPIOnlyTransactionAsync(CreateAPIOnlyTransactionRequest createAPIOnlyTransactionRequest) {
+    return berbixAPI.createAPIOnlyTransactionAsync(createAPIOnlyTransactionRequest);
+  }
+
   public CreateHostedTransactionResponse createHostedTransaction(CreateHostedTransactionRequest createHostedTransactionRequest) throws ExecutionException, InterruptedException {
     return createHostedTransactionAsync(createHostedTransactionRequest).get();
   }
@@ -102,6 +110,14 @@ public class BerbixClient implements AutoCloseable {
     } catch (NoSuchAlgorithmException | InvalidKeyException e) {
       return false;
     }
+  }
+
+  public UploadImagesResponse uploadImages(String clientToken, UploadImagesRequest uploadImagesRequest) throws ExecutionException, InterruptedException {
+    return uploadImagesAsync(clientToken, uploadImagesRequest).get();
+  }
+
+  public CompletableFuture<UploadImagesResponse> uploadImagesAsync(String clientToken, UploadImagesRequest uploadImagesRequest) {
+    return berbixAPI.uploadImagesAsync(clientToken, uploadImagesRequest);
   }
 
   @Override
