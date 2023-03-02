@@ -160,17 +160,21 @@ public class BerbixApi {
                 throw new BerbixException("Unable to create transaction", e);
             }
 
-            FetchTokensResponse fetchTokensResponse = null;
-            try {
-                fetchTokensResponse = objectMapper.readValue(apiResponseData, FetchTokensResponse.class);
-                fetchTokensResponse.responseJsonString = apiResponseData;
-            } catch (JsonProcessingException e) {
-                throw new BerbixException("Unable to create transaction", e);
-            } finally {
-                response.close();
-            }
+            if (response.isSuccessful()) {
+                FetchTokensResponse fetchTokensResponse = null;
+                try {
+                    fetchTokensResponse = objectMapper.readValue(apiResponseData, FetchTokensResponse.class);
+                    fetchTokensResponse.responseJsonString = apiResponseData;
+                } catch (JsonProcessingException e) {
+                    throw new BerbixException(apiResponseData);
+                } finally {
+                    response.close();
+                }
 
-            return fetchTokensResponse;
+                return fetchTokensResponse;
+            } else {
+                throw new BerbixException(apiResponseData);
+            }
         });
     }
 
@@ -240,7 +244,11 @@ public class BerbixApi {
             } else {
                 try {
                     responseData = response.body().string();
-                    return objectMapper.readValue(responseData, responseClass);
+                    if (response.isSuccessful()) {
+                        return objectMapper.readValue(responseData, responseClass);
+                    } else {
+                        throw new BerbixException(responseData);
+                    }
                 } catch (IOException e) {
                     throw new BerbixException("Unable to create transaction", e);
                 } finally {

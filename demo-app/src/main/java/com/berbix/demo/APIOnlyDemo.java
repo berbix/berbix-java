@@ -34,7 +34,7 @@ public class APIOnlyDemo {
             request.consentsToAutomatedFacialRecognition = true;
             request.apiOnlyOptions = new CreateAPIOnlyTransactionRequest.APIOnlyOptions();
 
-            System.out.println("creating API transaction transaction");
+            System.out.println("creating API transaction");
             CreateAPIOnlyTransactionResponse response = berbixClient.createAPIOnlyTransaction(request);
             System.out.println(objectMapper.writeValueAsString(response));
 
@@ -78,6 +78,7 @@ public class APIOnlyDemo {
 
         } catch (Exception e) {
             System.out.println(e);
+            System.out.println(e.getCause().getCause());
         } finally {
             berbixClient.close();
         }
