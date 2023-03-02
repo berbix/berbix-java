@@ -112,12 +112,12 @@ public class BerbixClient implements AutoCloseable {
     }
   }
 
-  public UploadImagesResponse uploadImages(Tokens tokens, UploadImagesRequest uploadImagesRequest) throws ExecutionException, InterruptedException {
-    return uploadImagesAsync(tokens, uploadImagesRequest).get();
+  public UploadImagesResponse uploadImages(String clientToken, UploadImagesRequest uploadImagesRequest) throws ExecutionException, InterruptedException {
+    return uploadImagesAsync(clientToken, uploadImagesRequest).get();
   }
 
-  public CompletableFuture<UploadImagesResponse> uploadImagesAsync(Tokens tokens, UploadImagesRequest uploadImagesRequest) {
-    return berbixAPI.uploadImagesAsync(tokens, uploadImagesRequest);
+  public CompletableFuture<UploadImagesResponse> uploadImagesAsync(String clientToken, UploadImagesRequest uploadImagesRequest) {
+    return berbixAPI.uploadImagesAsync(clientToken, uploadImagesRequest);
   }
 
   @Override

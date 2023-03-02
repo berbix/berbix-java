@@ -46,7 +46,7 @@ public class APIOnlyDemo {
 
             System.out.println("uploading front");
             imagesResponse = uploadImages(berbixClient,
-                    response.tokens,
+                    response.tokens.clientToken,
                     Collections.singletonList(imageData));
 
             System.out.println(objectMapper.writeValueAsString(imagesResponse));
@@ -57,7 +57,7 @@ public class APIOnlyDemo {
 
             System.out.println("uploading back");
             imagesResponse = uploadImages(berbixClient,
-                    response.tokens,
+                    response.tokens.clientToken,
                     Collections.singletonList(imageData));
 
             System.out.println(objectMapper.writeValueAsString(imagesResponse));
@@ -67,7 +67,7 @@ public class APIOnlyDemo {
                     UploadImagesRequest.ImageSubjectSelfieFront);
             System.out.println("uploading selfie");
             imagesResponse = uploadImages(berbixClient,
-                    response.tokens,
+                    response.tokens.clientToken,
                     Collections.singletonList(imageData));
 
             System.out.println(objectMapper.writeValueAsString(imagesResponse));
@@ -98,10 +98,10 @@ public class APIOnlyDemo {
         return imageData;
     }
 
-    private static UploadImagesResponse uploadImages(BerbixClient berbixClient, Tokens tokens, List<UploadImagesRequest.ImageData> imageData) throws IOException, ExecutionException, InterruptedException {
+    private static UploadImagesResponse uploadImages(BerbixClient berbixClient, String clientToken, List<UploadImagesRequest.ImageData> imageData) throws IOException, ExecutionException, InterruptedException {
         UploadImagesRequest uploadImagesRequest = new UploadImagesRequest();
         uploadImagesRequest.images = imageData;
 
-        return berbixClient.uploadImages(tokens, uploadImagesRequest);
+        return berbixClient.uploadImages(clientToken, uploadImagesRequest);
     }
 }

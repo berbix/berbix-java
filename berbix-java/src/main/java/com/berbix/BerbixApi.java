@@ -328,14 +328,14 @@ public class BerbixApi {
         }
     }
 
-    public CompletableFuture<UploadImagesResponse> uploadImagesAsync(Tokens tokens, UploadImagesRequest uploadImagesRequest) {
+    public CompletableFuture<UploadImagesResponse> uploadImagesAsync(String clientToken, UploadImagesRequest uploadImagesRequest) {
         if (uploadImagesRequest.images == null || uploadImagesRequest.images.isEmpty()) {
             CompletableFuture<UploadImagesResponse> completableFuture = new CompletableFuture<>();
             completableFuture.completeExceptionally(new BerbixException("Invalid uploadImagesRequest", new IllegalStateException()));
             return completableFuture;
         }
 
-        return tokenRequest("POST", tokens.clientToken, "/v0/images/upload", uploadImagesRequest, UploadImagesResponse.class)
+        return tokenRequest("POST", clientToken, "/v0/images/upload", uploadImagesRequest, UploadImagesResponse.class)
                 .handle((result, ex) -> {
                     if (ex != null) {
                         throw new BerbixException("Unable to upload images", ex);
